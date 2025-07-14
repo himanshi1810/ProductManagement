@@ -1,0 +1,44 @@
+<div class="container">
+  <h2>🛒 Manage Products</h2>
+
+  <form (ngSubmit)="submitForm()">
+    <input type="text" [(ngModel)]="productForm.name" name="name" placeholder="Product Name" required />
+    <input type="number" [(ngModel)]="productForm.tax" name="tax" placeholder="Tax %" required />
+    
+    <select [(ngModel)]="productForm.categoryId" name="categoryId" required>
+      <option value="" disabled selected>Select Category</option>
+      <option *ngFor="let cat of categories" [value]="cat.categoryId">{{ cat.name }}</option>
+    </select>
+
+    <button type="submit">{{ isEdit ? 'Update' : 'Add' }} Product</button>
+    <button type="button" (click)="resetForm()" *ngIf="isEdit">Cancel</button>
+  </form>
+
+  <hr />
+
+  <h3>📋 Product List</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Tax</th>
+        <th>Category</th>
+        <th>Price (Today)</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let p of products">
+        <td>{{ p.name }}</td>
+        <td>{{ p.tax }}%</td>
+       <td>{{ getCategoryName(p.categoryId) }}</td>
+        <td><button (click)="getTodayPrice(p.productId!)">Check</button></td>
+        <td>
+          <button (click)="edit(p)">Edit</button>
+          <button (click)="delete(p.productId!)">Delete</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+

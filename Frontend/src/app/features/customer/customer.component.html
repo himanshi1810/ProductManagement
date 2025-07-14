@@ -1,0 +1,35 @@
+<div class="container">
+  <h2>👥 Manage Customers</h2>
+
+  <form (ngSubmit)="submitForm()" #form="ngForm">
+    <input type="text" [(ngModel)]="customerForm.name" name="name" placeholder="Name" required />
+    <input type="email" [(ngModel)]="customerForm.email" name="email" placeholder="Email" required />
+
+    <button type="submit">{{ isEdit ? 'Update' : 'Add' }} Customer</button>
+    <button type="button" (click)="resetForm()" *ngIf="isEdit">Cancel</button>
+  </form>
+
+  <hr />
+
+  <table>
+    <thead>
+      <tr>
+        <th>Customer ID</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let c of customers">
+        <td>{{ c.customerId }}</td>
+        <td>{{ c.name }}</td>
+        <td>{{ c.email }}</td>
+        <td>
+          <button (click)="edit(c)">Edit</button>
+          <button (click)="delete(c.customerId!)">Delete</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

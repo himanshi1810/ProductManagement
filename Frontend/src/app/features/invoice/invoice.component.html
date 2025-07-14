@@ -1,0 +1,47 @@
+<div class="container">
+    <h2>Create Invoice</h2>
+
+    <select [(ngModel)]="selectedCustomerId">
+        <option value="0">Select Customer</option>
+        <option *ngFor="let c of customers" [value]="c.customerId">{{ c.name }}</option>
+    </select>
+
+    <div class="item-add">
+        <select [(ngModel)]="selectedProductId">
+            <option value="0">Select Product</option>
+            <option *ngFor="let p of products" [value]="p.productId">{{ p.name }}</option>
+        </select>
+
+        <input type="number" [(ngModel)]="quantity" min="1" />
+        <button (click)="addItem()">Add</button>
+    </div>
+
+    <ul>
+        <li *ngFor="let i of items">
+            {{ getProductName(i.productId) }} - Qty: {{ i.quantity }}
+        </li>
+
+    </ul>
+
+    <button (click)="submitInvoice()">Submit Invoice</button>
+
+    <hr />
+
+    <h3>All Invoices</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Customer</th>
+                <th>Date</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let invoice of invoices">
+                <td>{{getCustomerName(invoice.customerId)}}</td>
+                <td>{{ invoice.invoiceDate | date }}</td>
+                <td>{{ invoice.total }}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
