@@ -16,6 +16,7 @@ import { CommonModule } from '@angular/common';
   styleUrls: ['./invoice.component.css']
 })
 export class InvoiceComponent implements OnInit {
+  productsMap: { [id: number]: string } = {};
   customers: Customer[] = [];
   products: Product[] = [];
   items: InvoiceItemDto[] = [];
@@ -34,8 +35,14 @@ export class InvoiceComponent implements OnInit {
 
   ngOnInit(): void {
     this.customerService.getAll().subscribe(data => this.customers = data);
-    this.productService.getAll().subscribe(data => this.products = data);
-    this.loadInvoices();
+
+    this.productService.getAll().subscribe(data => {
+      this.products = data;
+      this.productsMap = Object.fromEntries(
+        data.map(p => [p.productId, p.name])
+      );
+      this.loadInvoices();
+    });
   }
 
   getCustomerName(customerId: number): string {
@@ -44,7 +51,7 @@ export class InvoiceComponent implements OnInit {
 
   loadInvoices() {
     this.invoiceService.getAllInvoices().subscribe((data) => {
-    this.invoices = data;
+      this.invoices = data;
     });
   }
 
@@ -55,7 +62,7 @@ export class InvoiceComponent implements OnInit {
   }
 
   getProductName(productId: number): string {
-    return this.products.find(p => p.productId === productId)?.name || 'Unknown';
+    return this.productsMap[productId] || 'Unknown';
   }
 
 
