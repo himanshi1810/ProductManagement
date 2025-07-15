@@ -8,6 +8,7 @@ import { CustomerService } from '../../Core/services/customer.service';
 import { ProductService } from '../../Core/services/product.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { InvoiceDetail } from '../../shared/models/invoice-detail.model';
 
 @Component({
   selector: 'app-invoice',
@@ -24,8 +25,10 @@ export class InvoiceComponent implements OnInit {
   selectedCustomerId: number = 0;
   selectedProductId: number = 0;
   quantity: number = 1;
-
+  invoiceDeytails: InvoiceDetail[] = [];
   invoices: Invoice[] = [];
+  selectedInvoiceDetails: InvoiceDetail[] = [];
+  showModal: boolean = false;
 
   constructor(
     private invoiceService: InvoiceService,
@@ -43,6 +46,7 @@ export class InvoiceComponent implements OnInit {
       );
       this.loadInvoices();
     });
+    this.loadInvoiceDetails()
   }
 
   getCustomerName(customerId: number): string {
@@ -51,11 +55,23 @@ export class InvoiceComponent implements OnInit {
 
   loadInvoices() {
     this.invoiceService.getAllInvoices().subscribe((data) => {
+      console.log(data);
       this.invoices = data;
     });
   }
 
+  loadInvoiceDetails() {
+    this.invoiceService.getInvoiceDetails().subscribe((data) => {
+      console.log(data);
+      this.invoiceDeytails = data;
+    });
+  }
+
   addItem() {
+    if (!this.isFormValid()) {
+      alert("Please select all fields properly before adding.");
+      return;
+    }
     this.items.push({ productId: this.selectedProductId, quantity: this.quantity });
     this.selectedProductId = 0;
     this.quantity = 1;
@@ -65,6 +81,10 @@ export class InvoiceComponent implements OnInit {
     return this.productsMap[productId] || 'Unknown';
   }
 
+  openInvoiceDetails(invoiceId: number) {
+    this.selectedInvoiceDetails = this.invoiceDeytails.filter(i => i.invoiceId === invoiceId);
+    this.showModal = true;
+  }
 
   submitInvoice() {
     const request: InvoiceRequestDto = {
@@ -77,5 +97,17 @@ export class InvoiceComponent implements OnInit {
       this.items = [];
       this.loadInvoices();
     });
+  }
+
+  isFormValid(): boolean {
+    return (
+      this.selectedCustomerId > 0 &&
+      this.selectedProductId > 0 &&
+      this.quantity > 0
+    );
+  }
+
+  closeModal() {
+    this.showModal = false;
   }
 }

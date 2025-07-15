@@ -31,6 +31,22 @@ namespace ProductManagement.API.Controllers
             return Ok(invoice);
         }
 
+        [HttpGet("GetInvoiceDetail")]
+        public async Task<IActionResult> GetInvoiceDetail()
+        {
+            var invoiceDetails = await _invoiceService.GetInvoiceDetail();
+            return Ok(invoiceDetails);
+        }
+
+        [HttpGet("GetInvoiceDetail/{id}")]
+        public async Task<IActionResult> GetInvoiceDetail(int id)
+        {
+            var invoiceDetail = await _invoiceService.GetByIdInvoiceDetail(id);
+            if (invoiceDetail == null)
+                return NotFound();
+            return Ok(invoiceDetail);
+        }
+
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] InvoiceRequestDto request)
         {

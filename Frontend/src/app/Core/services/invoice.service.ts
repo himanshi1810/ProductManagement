@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { Invoice } from '../../shared/models/invoice.model';
 import { Observable } from 'rxjs';
 import { InvoiceRequestDto } from '../../shared/models/invoice-request.model';
+import { InvoiceDetail } from '../../shared/models/invoice-detail.model';
 
 @Injectable({
   providedIn: 'root'
@@ -23,5 +24,13 @@ export class InvoiceService {
 
   createInvoice(request: InvoiceRequestDto): Observable<Invoice> {
     return this.http.post<Invoice>(this.apiUrl, request);
+  }
+
+  getInvoiceDetails() : Observable<InvoiceDetail[]>{
+    return this.http.get<InvoiceDetail[]>(`${this.apiUrl}/GetInvoiceDetail`);
+  }
+
+  getInvoiceDetailsById(id: number): Observable<InvoiceDetail[]> {
+    return this.http.get<InvoiceDetail[]>(`${this.apiUrl}/GetInvoiceDetail/${id}`);
   }
 }

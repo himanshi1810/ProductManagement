@@ -13,15 +13,15 @@
         </select>
 
         <input type="number" [(ngModel)]="quantity" min="1" />
-        <button (click)="addItem()">Add</button>
+        <button [disabled]="!isFormValid()" (click)="addItem()">Add</button>
     </div>
 
-    <ul>
+    <ul *ngIf="products.length > 0">
         <li *ngFor="let i of items">
             {{ getProductName(i.productId) }} - Qty: {{ i.quantity }}
         </li>
-
     </ul>
+
 
     <button (click)="submitInvoice()">Submit Invoice</button>
 
@@ -37,11 +37,43 @@
             </tr>
         </thead>
         <tbody>
-            <tr *ngFor="let invoice of invoices">
-                <td>{{getCustomerName(invoice.customerId)}}</td>
+            <tr *ngFor="let invoice of invoices" (click)="openInvoiceDetails(invoice.invoiceId)"
+                style="cursor: pointer;">
+                <td>{{ getCustomerName(invoice.customerId) }}</td>
                 <td>{{ invoice.invoiceDate | date }}</td>
                 <td>{{ invoice.total }}</td>
             </tr>
         </tbody>
     </table>
+
+    <div class="modal" *ngIf="showModal">
+        <div class="modal-content">
+            <span class="close-btn" (click)="closeModal()">&times;</span>
+            <h3>Invoice Details</h3>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>Rate</th>
+                        <th>SubTotal</th>
+                        <th>Tax</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let detail of selectedInvoiceDetails">
+                        <td>{{ getProductName(detail.productId) }}</td>
+                        <td>{{ detail.quantity }}</td>
+                        <td>{{ detail.rate }}</td>
+                        <td>{{ detail.subTotal }}</td>
+                        <td>{{ detail.taxAmount }}</td>
+                        <td>{{ detail.totalAmount }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
 </div>
