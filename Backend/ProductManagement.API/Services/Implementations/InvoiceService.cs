@@ -24,6 +24,16 @@ namespace ProductManagement.API.Services.Implementations
             return await _unitOfWork.Invoices.GetByIdAsync(id);
         }
 
+        public async Task<IEnumerable<InvoiceDetail>> GetInvoiceDetail()
+        {
+            return await _unitOfWork.InvoiceDetails.GetAllAsync();
+        }
+
+        public async Task<InvoiceDetail?> GetByIdInvoiceDetail(int id)
+        {
+            return await _unitOfWork.InvoiceDetails.GetByIdAsync(id);
+        }
+
         public async Task<Invoice> CreateInvoiceAsync(InvoiceRequestDto request)
         {
             var invoice = new Invoice

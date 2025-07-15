@@ -4,7 +4,7 @@
   <form (ngSubmit)="submitForm()">
     <input type="text" [(ngModel)]="productForm.name" name="name" placeholder="Product Name" required />
     <input type="number" [(ngModel)]="productForm.tax" name="tax" placeholder="Tax %" required />
-    
+
     <select [(ngModel)]="productForm.categoryId" name="categoryId" required>
       <option value="" disabled selected>Select Category</option>
       <option *ngFor="let cat of categories" [value]="cat.categoryId">{{ cat.name }}</option>
@@ -31,7 +31,7 @@
       <tr *ngFor="let p of products">
         <td>{{ p.name }}</td>
         <td>{{ p.tax }}%</td>
-       <td>{{ getCategoryName(p.categoryId) }}</td>
+        <td>{{ getCategoryName(p.categoryId) }}</td>
         <td><button (click)="getTodayPrice(p.productId!)">Check</button></td>
         <td>
           <button (click)="edit(p)">Edit</button>
@@ -41,4 +41,19 @@
     </tbody>
   </table>
 
+  <hr />
+  <h3> Set Product Price</h3>
 
+  <form (ngSubmit)="setPrice()">
+    <select [(ngModel)]="priceForm.productId" name="productId" required>
+      <option value="" disabled selected>Select Product</option>
+      <option *ngFor="let p of products" [value]="p.productId">{{ p.name }}</option>
+    </select>
+
+    <input type="number" [(ngModel)]="priceForm.price" name="price" placeholder="Price" required />
+
+    <input type="date" [(ngModel)]="priceForm.fromDate" name="fromDate" required />
+    <input type="date" [(ngModel)]="priceForm.toDate" name="toDate" required />
+
+    <button type="submit">Set Price</button>
+  </form>
