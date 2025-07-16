@@ -12,14 +12,12 @@
   <table>
     <thead>
       <tr>
-        <th>Category ID</th>
         <th>Name</th>
         <th>Actions</th>
       </tr>
     </thead>
     <tbody>
       <tr *ngFor="let c of categories">
-        <td>{{ c.categoryId }}</td>
         <td>{{ c.name }}</td>
         <td>
           <button (click)="edit(c)">Edit</button>
