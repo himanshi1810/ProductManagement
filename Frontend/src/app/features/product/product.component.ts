@@ -75,12 +75,21 @@ export class ProductComponent implements OnInit {
     this.editId = null;
   }
 
-  setPrice() {
-    this.productService.addPrice(this.priceForm).subscribe((msg) => {
-      alert(msg);
+setPrice() {
+  this.productService.addPrice(this.priceForm).subscribe({
+    next: (msg) => {
+      alert(msg);  
       this.priceForm = { productId: 0, price: 0, fromDate: '', toDate: '' };
-    });
-  }
+    },
+    error: (err) => {
+      const errorMessage = typeof err.error === 'string'
+        ? err.error
+        : 'An error occurred while setting the price.';
+      alert(errorMessage);
+    }
+  });
+}
+
 
   getTodayPrice(id: number) {
     this.productService.getPriceForToday(id).subscribe((price) => {

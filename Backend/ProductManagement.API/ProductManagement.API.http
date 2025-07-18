@@ -1,14 +1,14 @@
 @ProductManagement.API_HostAddress = http://localhost:5068
 
-Get {{ProductManagement.API_HostAddress}}/api/Invoice/GetInvoiceDetail/2
+Post {{ProductManagement.API_HostAddress}}/api/Product/add-price
 Content-Type: application/json
 Accept: application/json
-# {
-#   "ProductId" : 3,
-#    "Price" : "2000",
-#    "fromDate": "2025-01-01",
-#   "toDate": "2025-06-30"
-# }
+{
+  "ProductId" : 1008,
+   "Price" : "2000",
+   "fromDate": "2025-02-01",
+  "toDate": "2025-01-01"
+}
 
 
 

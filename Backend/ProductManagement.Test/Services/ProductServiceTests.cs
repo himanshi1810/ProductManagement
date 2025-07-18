@@ -164,10 +164,12 @@ namespace ProductManagement.Test.Services
         }
 
         [Fact]
-        public async Task AddPriceAsync_AddsPrice_IfProductExists()
+        public async Task AddPriceAsync_AddsPrice_IfValidData()
         {
             var product = new Product { ProductId = 1 };
             _mockProductRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(product);
+            _mockPriceRepo.Setup(r => r.FindAsync(It.IsAny<Expression<Func<ProductPrice, bool>>>()))
+                .ReturnsAsync(new List<ProductPrice>()); 
 
             var dto = new ProductPriceDto
             {
@@ -182,5 +184,54 @@ namespace ProductManagement.Test.Services
             _mockPriceRepo.Verify(p => p.AddAsync(It.Is<ProductPrice>(x => x.Price == 99)), Times.Once);
             _mockUnitOfWork.Verify(u => u.SaveChangesAsync(), Times.Once);
         }
+
+        [Fact]
+        public async Task AddPriceAsync_ThrowsIfOverlappingPriceExists()
+        {
+            var product = new Product { ProductId = 1 };
+            _mockProductRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(product);
+
+            var existingPrice = new ProductPrice
+            {
+                ProductId = 1,
+                FromDate = DateTime.UtcNow.AddDays(1),
+                ToDate = DateTime.UtcNow.AddDays(10)
+            };
+
+            _mockPriceRepo.Setup(r => r.FindAsync(It.IsAny<Expression<Func<ProductPrice, bool>>>()))
+                .ReturnsAsync(new List<ProductPrice> { existingPrice });
+
+            var dto = new ProductPriceDto
+            {
+                ProductId = 1,
+                Price = 120,
+                FromDate = DateTime.UtcNow.AddDays(5), 
+                ToDate = DateTime.UtcNow.AddDays(15)
+            };
+
+            var ex = await Assert.ThrowsAsync<Exception>(() => _productService.AddPriceAsync(dto));
+            Assert.Equal("A price already exists for this product in the given date range.", ex.Message);
+        }
+
+        [Fact]
+        public async Task AddPriceAsync_ThrowsIfFromDateAfterToDate()
+        {
+            var product = new Product { ProductId = 1 };
+            _mockProductRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(product);
+            _mockPriceRepo.Setup(r => r.FindAsync(It.IsAny<Expression<Func<ProductPrice, bool>>>()))
+                .ReturnsAsync(new List<ProductPrice>()); 
+
+            var dto = new ProductPriceDto
+            {
+                ProductId = 1,
+                Price = 120,
+                FromDate = DateTime.UtcNow.AddDays(10),
+                ToDate = DateTime.UtcNow.AddDays(5) 
+            };
+
+            var ex = await Assert.ThrowsAsync<Exception>(() => _productService.AddPriceAsync(dto));
+            Assert.Equal("Please check your from date which is greater then To date", ex.Message);
+        }
+
     }
 }

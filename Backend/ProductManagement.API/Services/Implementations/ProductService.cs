@@ -70,18 +70,34 @@ namespace ProductManagement.API.Services.Implementations
             var product = await _unitOfWork.Products.GetByIdAsync(priceDto.ProductId);
             if (product == null)
                 throw new Exception("Product not found");
+            var existingPrices = await _unitOfWork.ProductPrices
+                .FindAsync(p => p.ProductId == priceDto.ProductId);
 
-            var price = new ProductPrice
+            bool isOverlapping = existingPrices.Any(p =>
+                (priceDto.FromDate <= p.ToDate) && (priceDto.ToDate >= p.FromDate)
+            );
+
+            if (isOverlapping)
+                throw new Exception("A price already exists for this product in the given date range.");
+
+            if(priceDto.FromDate < priceDto.ToDate)
             {
-                ProductId = priceDto.ProductId,
-                Price = priceDto.Price,
-                FromDate = priceDto.FromDate,
-                ToDate = priceDto.ToDate
-            };
+                var price = new ProductPrice
+                {
+                    ProductId = priceDto.ProductId,
+                    Price = priceDto.Price,
+                    FromDate = priceDto.FromDate,
+                    ToDate = priceDto.ToDate
+                };
+                await _unitOfWork.ProductPrices.AddAsync(price);
+            } else
+            {
+                throw new Exception("Please check your from date which is greater then To date");
+            }
 
-            await _unitOfWork.ProductPrices.AddAsync(price);
             await _unitOfWork.SaveChangesAsync();
         }
+
 
     }
 
