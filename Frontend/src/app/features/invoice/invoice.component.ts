@@ -46,7 +46,7 @@ export class InvoiceComponent implements OnInit {
       );
       this.loadInvoices();
     });
-    this.loadInvoiceDetails()
+    this.loadInvoiceDetails();
   }
 
   getCustomerName(customerId: number): string {
@@ -96,6 +96,7 @@ export class InvoiceComponent implements OnInit {
       alert('Invoice created!');
       this.items = [];
       this.loadInvoices();
+      window.location.reload();
     });
   }
 

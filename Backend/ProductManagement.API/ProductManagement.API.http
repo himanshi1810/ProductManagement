@@ -1,13 +1,16 @@
 @ProductManagement.API_HostAddress = http://localhost:5068
 
-Post {{ProductManagement.API_HostAddress}}/api/Product/add-price
+Post {{ProductManagement.API_HostAddress}}/api/Invoice
 Content-Type: application/json
 Accept: application/json
 {
-  "ProductId" : 1008,
-   "Price" : "2000",
-   "fromDate": "2025-02-01",
-  "toDate": "2025-01-01"
+  "CustomerId": 6,
+  "Items": [
+    {
+      "ProductId": 1008,
+      "Quantity": 3
+    }
+  ]
 }
 
 

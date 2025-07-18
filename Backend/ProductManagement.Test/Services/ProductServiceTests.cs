@@ -148,6 +148,62 @@ namespace ProductManagement.Test.Services
         }
 
         [Fact]
+        public async Task GetPriceForTodayAsync_ReturnsDefaultPrice_IfNoDateBasedPrice()
+        {
+            var today = DateTime.UtcNow.Date;
+
+            _mockPriceRepo.SetupSequence(r => r.FindAsync(It.IsAny<Expression<Func<ProductPrice, bool>>>()))
+                .ReturnsAsync(new List<ProductPrice>()) 
+                .ReturnsAsync(new List<ProductPrice>
+                {
+            new ProductPrice
+            {
+                ProductId = 1,
+                Price = 200,
+                IsDefault = true
+            }
+                }); 
+
+            var result = await _productService.GetPriceForTodayAsync(1);
+
+            Assert.Equal(200, result);
+        }
+
+        [Fact]
+        public async Task GetPriceForTodayAsync_ReturnsNull_IfNoPriceFound()
+        {
+            _mockPriceRepo.SetupSequence(r => r.FindAsync(It.IsAny<Expression<Func<ProductPrice, bool>>>()))
+                .ReturnsAsync(new List<ProductPrice>()) // No date-based
+                .ReturnsAsync(new List<ProductPrice>()); // No default
+
+            var result = await _productService.GetPriceForTodayAsync(1);
+
+            Assert.Null(result);
+        }
+
+        [Fact]
+        public async Task AddPriceAsync_ThrowsIfDefaultPriceAlreadyExists()
+        {
+            var product = new Product { ProductId = 1 };
+            _mockProductRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(product);
+
+            var existingDefault = new ProductPrice { ProductId = 1, IsDefault = true };
+
+            _mockPriceRepo.Setup(r => r.FindAsync(It.IsAny<Expression<Func<ProductPrice, bool>>>()))
+                .ReturnsAsync(new List<ProductPrice> { existingDefault });
+
+            var dto = new ProductPriceDto
+            {
+                ProductId = 1,
+                Price = 100,
+                IsDefault = true
+            };
+
+            var ex = await Assert.ThrowsAsync<Exception>(() => _productService.AddPriceAsync(dto));
+            Assert.Equal("Default price already exists for this product.", ex.Message);
+        }
+
+        [Fact]
         public async Task AddPriceAsync_ThrowsException_IfProductNotFound()
         {
             _mockProductRepo.Setup(r => r.GetByIdAsync(100)).ReturnsAsync((Product)null);
@@ -183,6 +239,49 @@ namespace ProductManagement.Test.Services
 
             _mockPriceRepo.Verify(p => p.AddAsync(It.Is<ProductPrice>(x => x.Price == 99)), Times.Once);
             _mockUnitOfWork.Verify(u => u.SaveChangesAsync(), Times.Once);
+        }
+
+        [Fact]
+        public async Task AddPriceAsync_AddsDefaultPrice_IfNoneExists()
+        {
+            var product = new Product { ProductId = 1 };
+            _mockProductRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(product);
+
+            _mockPriceRepo.Setup(r => r.FindAsync(It.IsAny<Expression<Func<ProductPrice, bool>>>()))
+                .ReturnsAsync(new List<ProductPrice>()); // No existing default
+
+            var dto = new ProductPriceDto
+            {
+                ProductId = 1,
+                Price = 250,
+                IsDefault = true
+            };
+
+            await _productService.AddPriceAsync(dto);
+
+            _mockPriceRepo.Verify(p => p.AddAsync(It.Is<ProductPrice>(x =>
+                x.IsDefault && x.Price == 250 && x.FromDate == null && x.ToDate == null)), Times.Once);
+
+            _mockUnitOfWork.Verify(u => u.SaveChangesAsync(), Times.Once);
+        }
+
+        [Fact]
+        public async Task AddPriceAsync_ThrowsIfDatesMissing_ForNonDefaultPrice()
+        {
+            var product = new Product { ProductId = 1 };
+            _mockProductRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(product);
+
+            var dto = new ProductPriceDto
+            {
+                ProductId = 1,
+                Price = 100,
+                IsDefault = false,
+                FromDate = null,
+                ToDate = null
+            };
+
+            var ex = await Assert.ThrowsAsync<Exception>(() => _productService.AddPriceAsync(dto));
+            Assert.Equal("FromDate and ToDate must be provided for non-default price.", ex.Message);
         }
 
         [Fact]
@@ -230,7 +329,7 @@ namespace ProductManagement.Test.Services
             };
 
             var ex = await Assert.ThrowsAsync<Exception>(() => _productService.AddPriceAsync(dto));
-            Assert.Equal("Please check your from date which is greater then To date", ex.Message);
+            Assert.Equal("FromDate must be earlier than ToDate.", ex.Message);
         }
 
     }

@@ -60,9 +60,21 @@ namespace ProductManagement.API.Services.Implementations
 
             var prices = await _unitOfWork.ProductPrices.FindAsync(p =>
                 p.ProductId == productId &&
-                today >= p.FromDate.Date && today <= p.ToDate.Date);
+                !p.IsDefault &&
+                p.FromDate.HasValue &&
+                p.ToDate.HasValue &&
+                today >= p.FromDate.Value.Date &&
+                today <= p.ToDate.Value.Date);
 
-            return prices.FirstOrDefault()?.Price;
+            var priceForToday = prices.FirstOrDefault();
+            if (priceForToday != null)
+                return priceForToday.Price;
+
+            var defaultPrice = (await _unitOfWork.ProductPrices
+                .FindAsync(p => p.ProductId == productId && p.IsDefault))
+                .FirstOrDefault();
+
+            return defaultPrice?.Price;
         }
 
         public async Task AddPriceAsync(ProductPriceDto priceDto)
@@ -70,34 +82,57 @@ namespace ProductManagement.API.Services.Implementations
             var product = await _unitOfWork.Products.GetByIdAsync(priceDto.ProductId);
             if (product == null)
                 throw new Exception("Product not found");
-            var existingPrices = await _unitOfWork.ProductPrices
-                .FindAsync(p => p.ProductId == priceDto.ProductId);
 
-            bool isOverlapping = existingPrices.Any(p =>
-                (priceDto.FromDate <= p.ToDate) && (priceDto.ToDate >= p.FromDate)
-            );
-
-            if (isOverlapping)
-                throw new Exception("A price already exists for this product in the given date range.");
-
-            if(priceDto.FromDate < priceDto.ToDate)
+            if (priceDto.IsDefault)
             {
+                var defaultPrice = await _unitOfWork.ProductPrices
+                    .FindAsync(p => p.ProductId == priceDto.ProductId && p.IsDefault);
+
+                if (defaultPrice.Any())
+                    throw new Exception("Default price already exists for this product.");
+
+                var price = new ProductPrice
+                {
+                    ProductId = priceDto.ProductId,
+                    Price = priceDto.Price,
+                    IsDefault = true,
+                    FromDate = null,
+                    ToDate = null
+                };
+
+                await _unitOfWork.ProductPrices.AddAsync(price);
+            }
+            else
+            {
+                if (!priceDto.FromDate.HasValue || !priceDto.ToDate.HasValue)
+                    throw new Exception("FromDate and ToDate must be provided for non-default price.");
+
+                if (priceDto.FromDate >= priceDto.ToDate)
+                    throw new Exception("FromDate must be earlier than ToDate.");
+
+                var existingPrices = await _unitOfWork.ProductPrices
+                    .FindAsync(p => p.ProductId == priceDto.ProductId && !p.IsDefault);
+
+                bool isOverlapping = existingPrices.Any(p =>
+                    (priceDto.FromDate <= p.ToDate) && (priceDto.ToDate >= p.FromDate));
+
+                if (isOverlapping)
+                    throw new Exception("A price already exists for this product in the given date range.");
+
                 var price = new ProductPrice
                 {
                     ProductId = priceDto.ProductId,
                     Price = priceDto.Price,
                     FromDate = priceDto.FromDate,
-                    ToDate = priceDto.ToDate
+                    ToDate = priceDto.ToDate,
+                    IsDefault = false
                 };
+
                 await _unitOfWork.ProductPrices.AddAsync(price);
-            } else
-            {
-                throw new Exception("Please check your from date which is greater then To date");
             }
 
             await _unitOfWork.SaveChangesAsync();
         }
-
 
     }
 

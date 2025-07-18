@@ -16,7 +16,7 @@
 
   <hr />
 
-  <h3>📋 Product List</h3>
+  <h3>Product List</h3>
   <table>
     <thead>
       <tr>
@@ -51,9 +51,11 @@
     </select>
 
     <input type="number" [(ngModel)]="priceForm.price" name="price" placeholder="Price" required />
-
-    <input type="date" [(ngModel)]="priceForm.fromDate" name="fromDate" required />
-    <input type="date" [(ngModel)]="priceForm.toDate" name="toDate" required />
+    <small *ngIf="!priceForm.fromDate || !priceForm.toDate">
+      This will be set as the default price.
+    </small>
+    <input type="date" [(ngModel)]="priceForm.fromDate" name="fromDate"  />
+    <input type="date" [(ngModel)]="priceForm.toDate" name="toDate"  />
 
     <button type="submit">Set Price</button>
   </form>

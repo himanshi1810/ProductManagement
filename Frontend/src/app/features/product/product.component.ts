@@ -23,7 +23,7 @@ export class ProductComponent implements OnInit {
   isEdit = false;
   editId: number | null = null;
 
-  priceForm: ProductPriceDto = { productId: 0, price: 0, fromDate: '', toDate: '' };
+  priceForm: ProductPriceDto = { productId: 0, price: 0, fromDate: '', toDate: '', isDefault: false };
 
   constructor(private productService: ProductService, private categoryService: CategoryService) { }
 
@@ -75,21 +75,37 @@ export class ProductComponent implements OnInit {
     this.editId = null;
   }
 
-setPrice() {
-  this.productService.addPrice(this.priceForm).subscribe({
-    next: (msg) => {
-      alert(msg);  
-      this.priceForm = { productId: 0, price: 0, fromDate: '', toDate: '' };
-    },
-    error: (err) => {
-      const errorMessage = typeof err.error === 'string'
-        ? err.error
-        : 'An error occurred while setting the price.';
-      alert(errorMessage);
-    }
-  });
-}
+  getSanitizedPriceForm(): any {
+    const form = { ...this.priceForm };
 
+    const hasFromDate = form.fromDate && form.fromDate.trim() !== '';
+    const hasToDate = form.toDate && form.toDate.trim() !== '';
+
+    if (!hasFromDate || !hasToDate) {
+      form.isDefault = true;
+      form.fromDate = undefined;
+      form.toDate = undefined;
+    } else {
+      form.isDefault = false;
+    }
+
+    return form;
+  }
+
+  setPrice() {
+    this.productService.addPrice(this.getSanitizedPriceForm()).subscribe({
+      next: (msg) => {
+        alert(msg);
+        this.priceForm = { productId: 0, price: 0, fromDate: '', toDate: '', isDefault: false };
+      },
+      error: (err) => {
+        const errorMessage = typeof err.error === 'string'
+          ? err.error
+          : 'An error occurred while setting the price.';
+        alert(errorMessage);
+      }
+    });
+  }
 
   getTodayPrice(id: number) {
     this.productService.getPriceForToday(id).subscribe((price) => {

@@ -53,9 +53,20 @@ namespace ProductManagement.API.Services.Implementations
                     throw new Exception($"Product with ID {item.ProductId} not found");
 
                 var price = (await _unitOfWork.ProductPrices.FindAsync(p =>
-                    p.ProductId == item.ProductId &&
-                    today >= p.FromDate.Date && today <= p.ToDate.Date))
-                    .FirstOrDefault()?.Price ?? 0;
+                              p.ProductId == item.ProductId &&
+                              !p.IsDefault &&
+                              p.FromDate != null &&
+                              p.ToDate != null &&
+                              today >= p.FromDate.Value.Date &&
+                              today <= p.ToDate.Value.Date))
+                              .FirstOrDefault()?.Price;
+
+                if (price == null || price == 0)
+                {
+                    price = (await _unitOfWork.ProductPrices
+                             .FindAsync(p => p.ProductId == item.ProductId && p.IsDefault))
+                             .FirstOrDefault()?.Price ?? 0;
+                }
 
                 var qty = item.Quantity;
                 var subTotal = price * qty;
@@ -66,13 +77,13 @@ namespace ProductManagement.API.Services.Implementations
                 {
                     ProductId = item.ProductId,
                     Quantity = qty,
-                    Rate = price,
-                    SubTotal = subTotal,
-                    TaxAmount = taxAmt,
-                    TotalAmount = totalAmt
+                    Rate = (decimal)price,
+                    SubTotal = (decimal)subTotal,
+                    TaxAmount = (decimal)taxAmt,
+                    TotalAmount = (decimal)totalAmt
                 });
 
-                grandTotal += totalAmt;
+                grandTotal += (decimal)totalAmt;
             }
 
             invoice.Total = grandTotal;
@@ -82,5 +93,6 @@ namespace ProductManagement.API.Services.Implementations
 
             return invoice;
         }
+
     }
 }
